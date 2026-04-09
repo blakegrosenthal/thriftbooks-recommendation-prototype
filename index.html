@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Find Your Next Read</title>
+    <meta
+      name="description"
+      content="Personalized used-book recommendations inside the browsing experience."
+    />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <div class="utility-strip">
+        <span>Used books at everyday prices</span>
+        <div class="utility-links" aria-label="Store shortcuts">
+          <span>Deals</span>
+          <span>Rewards</span>
+          <span>Sell Your Books</span>
+        </div>
+      </div>
+
+      <header class="store-header" aria-label="Store navigation">
+        <div class="store-mark">Books</div>
+        <nav class="store-nav">
+          <span>Fiction</span>
+          <span>Nonfiction</span>
+          <span>Best Sellers</span>
+          <span>Deals</span>
+        </nav>
+        <div class="store-tools">
+          <span>Wish List</span>
+          <span>Cart</span>
+        </div>
+      </header>
+
+      <main class="page-shell">
+        <section class="recommendation-page" id="discovery-workspace">
+          <div class="page-heading">
+            <div>
+              <p class="breadcrumb">Home / Personalized recommendations</p>
+              <h1>Find your next read</h1>
+              <p class="page-subtitle">
+                Add a few books you loved and discover similar titles currently
+                available.
+              </p>
+            </div>
+
+            <div class="selection-status">
+              <p class="selection-count">
+                <span id="selected-count">0</span>
+                <span>/ 5 books</span>
+              </p>
+              <p class="helper-copy" id="helper-copy">
+                Add at least 3 books for the strongest match quality.
+              </p>
+            </div>
+          </div>
+
+          <section class="builder-card">
+            <div class="builder-grid">
+              <div class="search-area">
+                <label class="field-label" for="book-input"
+                  >Search books you enjoyed</label
+                >
+                <form class="search-form" id="search-form" autocomplete="off">
+                  <div class="input-shell">
+                    <input
+                      id="book-input"
+                      name="book-input"
+                      type="text"
+                      placeholder="Search for a book you loved"
+                    />
+                    <button type="submit" class="ghost-button">Add book</button>
+                  </div>
+                  <div
+                    class="suggestions"
+                    id="suggestions"
+                    role="listbox"
+                    aria-label="Suggested books"
+                  ></div>
+                </form>
+              </div>
+
+              <div class="builder-actions">
+                <button
+                  class="primary-button"
+                  id="recommend-button"
+                  type="button"
+                >
+                  Get recommendations
+                </button>
+              </div>
+            </div>
+
+            <div class="selected-books">
+              <div class="section-row">
+                <p class="section-heading">Selected books</p>
+                <button id="clear-selection" class="text-button" type="button">
+                  Clear
+                </button>
+              </div>
+              <div class="selected-grid" id="selected-grid"></div>
+            </div>
+
+            <div class="quick-picks">
+              <div class="section-row">
+                <p class="section-heading">Try a few examples</p>
+                <button id="swap-picks" class="text-button" type="button">
+                  More examples
+                </button>
+              </div>
+              <div class="quick-pick-row" id="quick-picks"></div>
+            </div>
+
+            <p class="status-message" id="status-message" aria-live="polite"></p>
+          </section>
+
+          <section class="results-panel" id="results-section">
+            <div class="results-header">
+              <div>
+                <p class="inventory-label">Books you can buy right now</p>
+                <h2>Recommended books</h2>
+                <p class="based-on-line" id="based-on-line">
+                  Recommendations based on: —
+                </p>
+                <p class="summary-title" id="summary-title">
+                  Showing books currently in stock that match your reading taste.
+                </p>
+                <p class="summary-copy" id="summary-copy">
+                  Showing the best overall mix for the books you selected.
+                </p>
+              </div>
+
+              <div class="results-actions">
+                <button
+                  id="refresh-results"
+                  class="secondary-button secondary-button-compact"
+                  type="button"
+                >
+                  Refresh suggestions
+                </button>
+              </div>
+            </div>
+
+            <div class="controls-row">
+              <div class="mode-group" id="mode-group" aria-label="Recommendation style">
+                <button class="mode-chip active" data-mode="all" type="button">
+                  All recommendations
+                </button>
+                <button class="mode-chip" data-mode="closer" type="button">
+                  Closer match
+                </button>
+                <button class="mode-chip" data-mode="broaden" type="button">
+                  Broaden results
+                </button>
+                <button class="mode-chip" data-mode="hidden-gems" type="button">
+                  Hidden gems
+                </button>
+                <button class="mode-chip" data-mode="popular" type="button">
+                  Popular picks
+                </button>
+              </div>
+
+              <label class="sort-control">
+                <span>Sort</span>
+                <select id="sort-select">
+                  <option value="match">Best match</option>
+                  <option value="price">Price: low to high</option>
+                  <option value="title">Title: A to Z</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="empty-state" id="empty-state">
+              <h3>Add a few books you loved to get personalized recommendations.</h3>
+              <p>We will only show titles with available copies in the catalog.</p>
+            </div>
+
+            <div class="results-grid" id="results-grid"></div>
+          </section>
+        </section>
+
+        <section class="module-view" id="module-section">
+          <aside class="inline-module inline-entry-module">
+            <div class="inline-entry-layout">
+              <div class="inline-entry-panel">
+                <div class="inline-module-copy">
+                  <h2>Find your next read</h2>
+                  <p>
+                    Add 2-3 books you loved and get personalized
+                    recommendations from titles currently in stock.
+                  </p>
+                </div>
+
+                <div class="module-search-area">
+                  <label class="field-label" for="module-book-input"
+                    >Add books you loved</label
+                  >
+                  <form
+                    class="inline-entry-form"
+                    id="module-search-form"
+                    autocomplete="off"
+                  >
+                    <div class="input-shell inline-input-shell">
+                      <input
+                        id="module-book-input"
+                        name="module-book-input"
+                        type="text"
+                        placeholder="Search by title or author"
+                      />
+                      <button
+                        type="submit"
+                        class="ghost-button ghost-button-compact"
+                        id="module-add-button"
+                      >
+                        Add book
+                      </button>
+                    </div>
+                    <div
+                      class="suggestions module-suggestions"
+                      id="module-suggestions"
+                      role="listbox"
+                      aria-label="Suggested books"
+                    ></div>
+                  </form>
+                </div>
+
+                <div class="module-selected-block">
+                  <div class="section-row module-row-header">
+                    <p class="section-heading">Selected books</p>
+                    <p class="module-count" id="module-count">0 / 4</p>
+                  </div>
+                  <div class="module-chip-row" id="module-selected-grid"></div>
+                </div>
+
+                <div class="module-example-block">
+                  <p class="section-heading">Try a few examples</p>
+                  <div class="inline-examples" aria-label="Example books">
+                    <button
+                      type="button"
+                      class="quick-pick inline-example"
+                      data-module-add-id="night-circus"
+                    >
+                      The Night Circus
+                    </button>
+                    <button
+                      type="button"
+                      class="quick-pick inline-example"
+                      data-module-add-id="project-hail-mary"
+                    >
+                      Project Hail Mary
+                    </button>
+                    <button
+                      type="button"
+                      class="quick-pick inline-example"
+                      data-module-add-id="lessons-in-chemistry"
+                    >
+                      Lessons in Chemistry
+                    </button>
+                    <button
+                      type="button"
+                      class="quick-pick inline-example"
+                      data-module-add-id="daisy-jones"
+                    >
+                      Daisy Jones &amp; The Six
+                    </button>
+                  </div>
+                </div>
+
+                <p class="module-status" id="module-status">
+                  Add 2 to 4 books to build a stronger starting point.
+                </p>
+
+                <div class="inline-entry-actions">
+                  <button
+                    type="button"
+                    class="primary-button primary-button-compact"
+                    id="module-go-button"
+                  >
+                    See recommendations
+                  </button>
+                </div>
+              </div>
+
+              <div class="module-preview" aria-live="polite">
+                <div class="module-preview-header">
+                  <p class="section-heading">Your picks</p>
+                  <p class="module-count" id="module-preview-count">0 selected</p>
+                </div>
+                <div class="module-preview-empty" id="module-preview-empty">
+                  <strong>Your picks will appear here</strong>
+                  <p>Add 2-3 books you loved to get better recommendations.</p>
+                </div>
+                <div class="module-preview-grid" id="module-preview-grid"></div>
+                <p class="module-preview-note">
+                  These titles shape the recommendations you will see in the
+                  full experience.
+                </p>
+              </div>
+            </div>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
