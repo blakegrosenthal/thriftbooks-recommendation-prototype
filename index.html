@@ -37,7 +37,8 @@
       </header>
 
       <main class="page-shell">
-        <section class="recommendation-page" id="discovery-workspace">
+        <div id="recommendation-content">
+          <section class="recommendation-page" id="discovery-workspace">
           <div class="page-heading">
             <div>
               <p class="breadcrumb">Home / Personalized recommendations</p>
@@ -181,9 +182,9 @@
 
             <div class="results-grid" id="results-grid"></div>
           </section>
-        </section>
+          </section>
 
-        <section class="module-view" id="module-section">
+          <section class="module-view" id="module-section">
           <aside class="inline-module inline-entry-module">
             <div class="inline-entry-layout">
               <div class="inline-entry-panel">
@@ -302,6 +303,140 @@
               </div>
             </div>
           </aside>
+          </section>
+        </div>
+
+        <section class="book-detail-page hidden" id="book-detail-page">
+          <div class="detail-page-header">
+            <nav class="detail-breadcrumb" aria-label="Breadcrumb">
+              <span>Home</span>
+              <span>/</span>
+              <span>Personalized Recommendations</span>
+              <span>/</span>
+              <span id="detail-breadcrumb-title">Book title</span>
+            </nav>
+            <button
+              type="button"
+              class="text-button detail-back-button"
+              id="detail-back-button"
+            >
+              Back to recommendations
+            </button>
+          </div>
+
+          <section class="detail-surface">
+            <div class="detail-hero">
+              <div class="detail-cover-column">
+                <div class="detail-cover-shell" id="detail-cover-shell"></div>
+              </div>
+
+              <div class="detail-copy-column">
+                <div class="detail-title-block">
+                  <p class="detail-genre-pill" id="detail-genre-pill">Fantasy</p>
+                  <h1 id="detail-title">Book title</h1>
+                  <p class="detail-author" id="detail-author">Author name</p>
+                </div>
+
+                <div class="detail-context-card">
+                  <p class="section-heading">Why it was recommended</p>
+                  <p class="detail-context-copy" id="detail-context-copy">
+                    Recommended because you liked a similar title.
+                  </p>
+                </div>
+
+                <div class="detail-summary-section">
+                  <p class="section-heading">About this book</p>
+                  <p class="detail-summary" id="detail-summary">
+                    Book summary goes here.
+                  </p>
+                </div>
+
+                <div class="detail-facts-grid">
+                  <div class="detail-fact">
+                    <span>Genre</span>
+                    <strong id="detail-genre-value">Fantasy</strong>
+                  </div>
+                  <div class="detail-fact">
+                    <span>Pace</span>
+                    <strong id="detail-pace">Measured</strong>
+                  </div>
+                  <div class="detail-fact detail-fact-wide">
+                    <span>Readers like it for</span>
+                    <strong id="detail-signals">Atmospheric tone and character-driven storytelling</strong>
+                  </div>
+                </div>
+              </div>
+
+              <aside class="detail-buy-box">
+                <p class="inventory-label">Available now</p>
+                <p class="detail-price" id="detail-price">$8.49</p>
+
+                <div class="detail-purchase-meta">
+                  <div class="detail-meta-row">
+                    <span>Format</span>
+                    <strong id="detail-format">Paperback</strong>
+                  </div>
+                  <div class="detail-meta-row">
+                    <span>Condition</span>
+                    <strong id="detail-condition">Used Good</strong>
+                  </div>
+                  <div class="detail-meta-row">
+                    <span>Stock</span>
+                    <strong id="detail-stock">In Stock</strong>
+                  </div>
+                  <div class="detail-meta-row">
+                    <span>Copies</span>
+                    <strong id="detail-copies">38 copies available</strong>
+                  </div>
+                </div>
+
+                <p class="detail-shipping-note" id="detail-shipping-note">
+                  Usually ships within 24 hours.
+                </p>
+
+                <div class="detail-action-buttons">
+                  <button
+                    type="button"
+                    class="primary-button"
+                    data-detail-action="cart"
+                    id="detail-add-to-cart"
+                  >
+                    Add to Cart
+                  </button>
+                  <button
+                    type="button"
+                    class="secondary-button"
+                    data-detail-action="buy"
+                    id="detail-buy-now"
+                  >
+                    Buy Now
+                  </button>
+                  <button
+                    type="button"
+                    class="ghost-button"
+                    data-detail-action="save"
+                    id="detail-save-button"
+                  >
+                    Save
+                  </button>
+                </div>
+
+                <p class="detail-action-feedback" id="detail-action-feedback">
+                  Choose an action to continue.
+                </p>
+              </aside>
+            </div>
+          </section>
+
+          <section class="detail-related-section">
+            <div class="detail-related-header">
+              <div>
+                <p class="inventory-label">More to explore</p>
+                <h2>More like this</h2>
+              </div>
+            </div>
+            <div class="detail-related-grid" id="detail-related-grid"></div>
+          </section>
         </section>
       </main>
     </div>

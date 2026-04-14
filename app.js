@@ -105,9 +105,15 @@ const state = {
   variationSeed: 0,
   hasSubmitted: false,
   moduleStatusMessage: "",
+  currentView: "recommendations",
+  activeBookId: null,
+  detailAction: "",
+  detailFeedback: "",
 };
 
 const elements = {
+  recommendationContent: document.querySelector("#recommendation-content"),
+  bookDetailPage: document.querySelector("#book-detail-page"),
   bookInput: document.querySelector("#book-input"),
   searchForm: document.querySelector("#search-form"),
   suggestions: document.querySelector("#suggestions"),
@@ -122,6 +128,7 @@ const elements = {
   refreshResults: document.querySelector("#refresh-results"),
   modeGroup: document.querySelector("#mode-group"),
   sortSelect: document.querySelector("#sort-select"),
+  resultsSection: document.querySelector("#results-section"),
   emptyState: document.querySelector("#empty-state"),
   resultsGrid: document.querySelector("#results-grid"),
   summaryTitle: document.querySelector("#summary-title"),
@@ -138,9 +145,29 @@ const elements = {
   modulePreviewGrid: document.querySelector("#module-preview-grid"),
   modulePreviewEmpty: document.querySelector("#module-preview-empty"),
   modulePreviewCount: document.querySelector("#module-preview-count"),
+  detailBreadcrumbTitle: document.querySelector("#detail-breadcrumb-title"),
+  detailBackButton: document.querySelector("#detail-back-button"),
+  detailCoverShell: document.querySelector("#detail-cover-shell"),
+  detailGenrePill: document.querySelector("#detail-genre-pill"),
+  detailTitle: document.querySelector("#detail-title"),
+  detailAuthor: document.querySelector("#detail-author"),
+  detailContextCopy: document.querySelector("#detail-context-copy"),
+  detailSummary: document.querySelector("#detail-summary"),
+  detailGenreValue: document.querySelector("#detail-genre-value"),
+  detailPace: document.querySelector("#detail-pace"),
+  detailSignals: document.querySelector("#detail-signals"),
+  detailPrice: document.querySelector("#detail-price"),
+  detailFormat: document.querySelector("#detail-format"),
+  detailCondition: document.querySelector("#detail-condition"),
+  detailStock: document.querySelector("#detail-stock"),
+  detailCopies: document.querySelector("#detail-copies"),
+  detailShippingNote: document.querySelector("#detail-shipping-note"),
+  detailActionFeedback: document.querySelector("#detail-action-feedback"),
+  detailRelatedGrid: document.querySelector("#detail-related-grid"),
 };
 
 const catalogById = new Map(catalog.map((book) => [book.id, book]));
+const defaultPageTitle = document.title;
 
 function getBooksByIds(ids) {
   return ids.map((id) => catalogById.get(id)).filter(Boolean);
@@ -412,6 +439,280 @@ function buildExplanation(book) {
   }
 
   return `Because you liked ${book.topMatch.favorite.title} for its ${baseReason}.`;
+}
+
+function paceLabel(pace) {
+  if (!pace) {
+    return "Balanced";
+  }
+  return pace.charAt(0).toUpperCase() + pace.slice(1);
+}
+
+function conditionCopy(book) {
+  if (book.availability === "Limited Stock") {
+    return "Used Acceptable";
+  }
+  if (book.availability === "Low Stock") {
+    return "Used Good";
+  }
+  if (book.format === "Hardcover" || book.price >= 10) {
+    return "Used Very Good";
+  }
+  return "Used Good";
+}
+
+function shippingCopy(book) {
+  if (book.availability === "Low Stock" || book.availability === "Limited Stock") {
+    return "Order soon. Usually ships within 24 hours.";
+  }
+  return "Usually ships within 24 hours.";
+}
+
+function bookSignalPhrases(book, limit = 3) {
+  return book.signals
+    .map((signal) => signalReasonMeta[signal])
+    .filter(Boolean)
+    .slice(0, limit)
+    .map((entry) => entry.phrase);
+}
+
+function buildDetailSummary(book) {
+  const tastePhrases = bookSignalPhrases(book, 2);
+  if (tastePhrases.length === 0) {
+    return book.synopsis;
+  }
+  return `${book.synopsis} A strong pick for readers drawn to ${joinPhrases(tastePhrases)}.`;
+}
+
+function buildDetailSignalSummary(book) {
+  const phrases = bookSignalPhrases(book, 3);
+  if (phrases.length === 0) {
+    return "A strong overall reading feel";
+  }
+  return joinPhrases(phrases);
+}
+
+function getRecommendationRecord(bookId) {
+  return state.results.find((book) => book.id === bookId) || null;
+}
+
+function getBookRecommendationData(bookId) {
+  const fromResults = getRecommendationRecord(bookId);
+  if (fromResults) {
+    return fromResults;
+  }
+
+  const book = catalogById.get(bookId);
+  if (!book) {
+    return null;
+  }
+
+  const selectedBooks = getSelectedBooks();
+  if (selectedBooks.length === 0) {
+    return {
+      ...book,
+      topMatch: null,
+    };
+  }
+
+  const matches = selectedBooks
+    .map((favorite) => computeSharedBookScore(book, favorite))
+    .sort((left, right) => right.score - left.score);
+
+  return {
+    ...book,
+    topMatch: matches[0] || null,
+  };
+}
+
+function buildDetailContext(book) {
+  if (book?.topMatch) {
+    return buildExplanation(book);
+  }
+  return "Selected from titles currently in stock based on books you liked.";
+}
+
+function getMoreLikeThis(bookId) {
+  const currentBook = catalogById.get(bookId);
+  if (!currentBook) {
+    return [];
+  }
+
+  return catalog
+    .filter(
+      (candidate) =>
+        candidate.id !== bookId && candidate.availability !== "Out of Stock"
+    )
+    .map((candidate) => {
+      const similarity = computeSharedBookScore(candidate, currentBook);
+      return {
+        ...candidate,
+        similarityScore:
+          similarity.score +
+          similarity.sharedGenres.length * 4 +
+          similarity.sharedSignals.length * 2 +
+          similarity.sharedPace * 2,
+      };
+    })
+    .sort((left, right) => right.similarityScore - left.similarityScore)
+    .slice(0, 4);
+}
+
+function scrollToElement(element) {
+  if (element?.scrollIntoView) {
+    element.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+}
+
+function syncDetailActionButtons() {
+  document.querySelectorAll("[data-detail-action]").forEach((button) => {
+    button.classList.toggle(
+      "is-active",
+      button.dataset.detailAction === state.detailAction
+    );
+  });
+}
+
+function renderDetailRelated(bookId) {
+  const relatedBooks = getMoreLikeThis(bookId);
+  elements.detailRelatedGrid.innerHTML = relatedBooks
+    .map(
+      (book) => `
+        <article class="detail-related-card">
+          <div class="detail-related-cover">
+            ${coverMarkup(book)}
+          </div>
+          <div class="detail-related-copy">
+            <p class="detail-related-kicker">${titleCase(book.genres[0])}</p>
+            <h3>${book.title}</h3>
+            <p>${book.author}</p>
+            <div class="detail-related-row">
+              <strong>${currency(book.price)}</strong>
+              <span>${book.availability}</span>
+            </div>
+            <a
+              href="#book/${book.id}"
+              class="text-button detail-related-link"
+              data-view-book-id="${book.id}"
+            >
+              View Book
+            </a>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderBookDetail(bookId) {
+  const book = getBookRecommendationData(bookId);
+  if (!book) {
+    return;
+  }
+
+  state.activeBookId = bookId;
+  elements.detailBreadcrumbTitle.textContent = book.title;
+  elements.detailCoverShell.innerHTML = coverMarkup(book);
+  elements.detailGenrePill.textContent = titleCase(book.genres[0]);
+  elements.detailTitle.textContent = book.title;
+  elements.detailAuthor.textContent = book.author;
+  elements.detailContextCopy.textContent = buildDetailContext(book);
+  elements.detailSummary.textContent = buildDetailSummary(book);
+  elements.detailGenreValue.textContent = book.genres
+    .map((genre) => titleCase(genre))
+    .join(" / ");
+  elements.detailPace.textContent = paceLabel(book.pace);
+  elements.detailSignals.textContent = buildDetailSignalSummary(book);
+  elements.detailPrice.textContent = currency(book.price);
+  elements.detailFormat.textContent = book.format;
+  elements.detailCondition.textContent = conditionCopy(book);
+  elements.detailStock.textContent = book.availability;
+  elements.detailCopies.textContent = inventoryCopy(book);
+  elements.detailShippingNote.textContent = shippingCopy(book);
+  elements.detailActionFeedback.textContent =
+    state.detailFeedback || "Choose an action to continue.";
+  document.title = `${book.title} | Find Your Next Read`;
+
+  syncDetailActionButtons();
+  renderDetailRelated(bookId);
+}
+
+function showDetailView(bookId, { updateHash = true } = {}) {
+  if (!catalogById.has(bookId)) {
+    showRecommendationView({ updateHash: false });
+    return;
+  }
+
+  state.currentView = "detail";
+  state.activeBookId = bookId;
+  state.detailAction = "";
+  state.detailFeedback = "Choose an action to continue.";
+  renderBookDetail(bookId);
+  elements.recommendationContent.classList.add("hidden");
+  elements.bookDetailPage.classList.remove("hidden");
+
+  if (updateHash) {
+    const nextHash = `#book/${bookId}`;
+    if (window.location.hash !== nextHash) {
+      window.location.hash = nextHash;
+    }
+  }
+
+  window.requestAnimationFrame(() => {
+    scrollToElement(elements.bookDetailPage);
+  });
+}
+
+function showRecommendationView({ updateHash = true, scrollToResults = false } = {}) {
+  state.currentView = "recommendations";
+  state.activeBookId = null;
+  state.detailAction = "";
+  state.detailFeedback = "";
+  elements.recommendationContent.classList.remove("hidden");
+  elements.bookDetailPage.classList.add("hidden");
+  document.title = defaultPageTitle;
+
+  if (updateHash) {
+    const nextHash = "#recommendations";
+    if (window.location.hash !== nextHash) {
+      window.location.hash = nextHash;
+    }
+  }
+
+  if (scrollToResults) {
+    window.requestAnimationFrame(() => {
+      scrollToElement(state.hasSubmitted ? elements.resultsSection : elements.discoveryWorkspace);
+    });
+  }
+}
+
+function routeFromHash() {
+  const hash = window.location.hash.replace(/^#/, "");
+  if (hash.startsWith("book/")) {
+    return {
+      view: "detail",
+      bookId: decodeURIComponent(hash.slice("book/".length)),
+    };
+  }
+
+  return { view: "recommendations" };
+}
+
+function syncViewFromHash() {
+  const route = routeFromHash();
+
+  if (route.view === "detail" && catalogById.has(route.bookId)) {
+    showDetailView(route.bookId, { updateHash: false });
+    return;
+  }
+
+  showRecommendationView({
+    updateHash: false,
+    scrollToResults: state.currentView === "detail",
+  });
 }
 
 function updateSummary() {
@@ -719,7 +1020,13 @@ function renderResults() {
             </div>
             <p class="card-reason">${buildExplanation(book)}</p>
             <div class="card-actions">
-              <button class="primary-inline-button" type="button">View Book</button>
+              <a
+                href="#book/${book.id}"
+                class="primary-inline-button"
+                data-view-book-id="${book.id}"
+              >
+                View Book
+              </a>
               <button
                 class="text-button"
                 type="button"
@@ -955,6 +1262,13 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  const viewBookLink = event.target.closest("[data-view-book-id]");
+  if (viewBookLink) {
+    event.preventDefault();
+    showDetailView(viewBookLink.dataset.viewBookId);
+    return;
+  }
+
   const focusButton = event.target.closest("[data-focus-from]");
   if (focusButton) {
     state.focusMode = "closer";
@@ -1035,5 +1349,34 @@ elements.moduleGoButton.addEventListener("click", () => {
   openDiscoveryWorkspace();
 });
 
+elements.detailBackButton.addEventListener("click", () => {
+  showRecommendationView({ updateHash: true, scrollToResults: true });
+});
+
+document.querySelectorAll("[data-detail-action]").forEach((button) => {
+  button.addEventListener("click", () => {
+    if (!state.activeBookId) {
+      return;
+    }
+
+    const activeBook = catalogById.get(state.activeBookId);
+    const action = button.dataset.detailAction;
+    state.detailAction = action;
+    state.detailFeedback =
+      action === "cart"
+        ? `${activeBook.title} added to cart.`
+        : action === "buy"
+          ? `Ready to buy ${activeBook.title}.`
+          : `${activeBook.title} saved to your wish list.`;
+
+    renderBookDetail(state.activeBookId);
+  });
+});
+
+window.addEventListener("hashchange", () => {
+  syncViewFromHash();
+});
+
 syncModeButtons();
 updateUI();
+syncViewFromHash();
